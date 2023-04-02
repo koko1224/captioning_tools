@@ -11,47 +11,40 @@ class ImageAnnotator(QMainWindow):
         self.setWindowTitle('ImageCaptioningTool')
         
         # ウィジェットのサイズを設定
-        self.setGeometry(100, 100, 950, 540)
+        self.ori_width = 1000
+        self.ori_height = 600
+        self.setGeometry(100, 100, self.ori_width, self.ori_height)
 
         # 画像の表示
+        self.img_size_w = 540
+        self.img_size_h = 600
         self.label = QLabel(self)
-        self.label.setGeometry(100, 0, 540, 540) # (80,20)(700,420)
         self.label.setFrameStyle(QLabel.Panel | QLabel.Sunken)
         
-        # 画像のインデックスと合計数
+        # 画像のインデックス
         self.count_number = QLabel(self)
         self.count_number.setText("")
-        self.count_number.setGeometry(650, 5, 40, 30) #(80,430)(700,460)
-        
-        self.all_image_number = QLabel(self)
-        self.all_image_number.setText("")
-        self.all_image_number.setGeometry(700, 5, 40, 30) #(80,430)(700,460)
+        # 画像の合計数
+        self.total_images = QLabel(self)
+        self.total_images.setText("")
 
         # labelラベル
         self.image_label_label = QLabel(self)
         self.image_label_label.setText("label:")
-        self.image_label_label.setGeometry(650, 50, 60, 30) #(80,430)(700,460)
-        
         # labelテキストボックスを作成
         self.image_label = QLineEdit(self)
-        self.image_label.setGeometry(710, 50, 170, 30) #(80,430)(700,460)
 
         # captionラベル
         self.caption_label = QLabel(self)
         self.caption_label.setText("caption")
-        self.caption_label.setGeometry(650, 80, 620, 30) #(80,430)(700,460)
-        
         # captionテキストボックスを作成
         self.caption = QTextEdit(self)
-        self.caption.setGeometry(650, 110, 950-660, 80) #(80,430)(700,460)
         
-        # 画像一覧スクロール
+        # 画像一覧スクロールラベル
         self.images_list_label = QLabel(self)
         self.images_list_label.setText("image list")
-        self.images_list_label.setGeometry(650, 200, 150, 30) #(80,430)(700,460)
-        
+        # 画像一覧スクロール
         self.scroll_area_content = QListWidget(self)
-        self.scroll_area_content.setGeometry(650, 230, 290, 300) #(80,430)(700,460)
         self.scroll_area_content.currentItemChanged.connect(self.show_selected_image)
         
         # フォルダーボタン
@@ -140,9 +133,11 @@ class ImageAnnotator(QMainWindow):
                 for image in self.images:
                     self.scroll_area_content.addItem(image)
                 self.current_image_index = 0
-                self.all_image_number.setText("/ " + str(len(self.images)))
+                self.total_images.setText("/ " + str(len(self.images)))
                 self.count_number.setText(str(self.current_image_index))
                 self.show_image()
+        else:
+            self.open_folder = False
 
     def show_image(self):
         # 画像の表示
@@ -219,31 +214,35 @@ class ImageAnnotator(QMainWindow):
         super().resizeEvent(event)
         # ウィンドウサイズを取得
         size = event.size()
-        print(size)
-
-        img_width = max(size.height(),700)
         
-        self.label.setGeometry(100, 0, size.width()-410, size.height()) # (80,20)(700,420)
+        # 画像のサイズは初期の比率を保つようにリサイズ
+        img_ratio_w = self.img_size_w / (self.ori_width - 100)
+        new_img_size = int(img_ratio_w * (size.width()-100))
+        # annotation部分のx座標のstart位置
+        ann_x = new_img_size + 100 + 10 
+        
+        # 画像
+        self.label.setGeometry(100, 0, new_img_size, size.height()) 
         
         # 画像のインデックスと合計数
-        self.count_number.setGeometry(size.width()-300, 5, 40, 30) #(80,430)(700,460)
-        self.all_image_number.setGeometry(size.width()-250, 5, 40, 30) #(80,430)(700,460)
+        self.count_number.setGeometry(ann_x, 5, 40, 30) 
+        self.total_images.setGeometry(ann_x + 50, 5, 40, 30) 
 
         # labelラベル
-        self.image_label_label.setGeometry(size.width()-300, 50, 60, 30) #(80,430)(700,460)
+        self.image_label_label.setGeometry(ann_x, 50, 60, 30) 
         
         # labelテキストボックスを作成
-        self.image_label.setGeometry(size.width()-240, 50, 170, 30) #(80,430)(700,460)
+        self.image_label.setGeometry(ann_x + 60, 50, 170, 30) 
 
         # captionラベル
-        self.caption_label.setGeometry(size.width()-300, 80, 620, 30) #(80,430)(700,460)
+        self.caption_label.setGeometry(ann_x, 80, 620, 30) 
         
         # captionテキストボックスを作成
-        self.caption.setGeometry(size.width()-300, 110, 950-660, 80) #(80,430)(700,460)
+        self.caption.setGeometry(ann_x, 110, size.width() - (ann_x + 10), 180) 
         
         # 画像一覧スクロール
-        self.images_list_label.setGeometry(size.width()-300, 200, 300, 30) #(80,430)(700,460)
-        self.scroll_area_content.setGeometry(size.width()-300, 230, 290, 300) #(80,430)(700,460)
+        self.images_list_label.setGeometry(ann_x, 300, 300, 30) 
+        self.scroll_area_content.setGeometry(ann_x, 330, size.width() - (ann_x + 10), size.height()-330-10) 
 
 
 if __name__ == '__main__':
