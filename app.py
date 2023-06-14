@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidget, QAction,\
                             QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsPolygonItem
 from PyQt5.QtGui import QPixmap,QImage, QIcon, QKeySequence, QPixmap, QPainter, QColor, QPen, QPolygonF, QBrush
 
-from utils import load_annotations, get_filenames, get_textfolder, get_annotation_dir
+from utils import load_annotations, get_filenames, get_textfolder, get_annotation_path, check_directory_type
 from components import FolderSelectionDialog, Action_Button
 
 class ImageAnnotator(QMainWindow):
@@ -55,10 +55,10 @@ class ImageAnnotator(QMainWindow):
         self.images_list.currentItemChanged.connect(self.show_selected_image)
         
         # ボタン
-        self.folder_button = Action_Button(self, "./icon/open-file-folder-emoji.png", "Open", ax = 20, ay = 20, aw = 50, ah = 70)
-        self.next_button = Action_Button(self, "./icon/right.png", "Next",20, 110, 50, 70)
-        self.back_button = Action_Button(self, "./icon/left.png", "Back", 20, 200, 50, 70)
-        self.save_button = Action_Button(self, "./icon/save.png", "Save", 20, 290, 50, 70)
+        self.folder_button = Action_Button(self, "./icon/open-file-folder-emoji.png", "Open", 20, 20, 50, 70)
+        self.next_button   = Action_Button(self, "./icon/right.png", "Next",20, 110, 50, 70)
+        self.back_button   = Action_Button(self, "./icon/left.png", "Back", 20, 200, 50, 70)
+        self.save_button   = Action_Button(self, "./icon/save.png", "Save", 20, 290, 50, 70)
         
         self.image_folder_path = None
         self.text_folder_path = None
@@ -117,14 +117,25 @@ class ImageAnnotator(QMainWindow):
         if folder_path:
             self.image_folder_path = os.path.join(folder_path, 'image')
             if os.path.isdir(self.image_folder_path):
+                content_type = check_directory_type(self.image_folder_path)
                 self.text_folder_path = get_textfolder(folder_path=folder_path)
                 if not os.path.isdir(self.text_folder_path):
-                    os.mkdir(self.text_folder_path)
+                    if content_type == "file":
+                        os.mkdir(self.text_folder_path)
+                    else:
+                        os.makedirs(os.path.join(self.text_folder_path,"train"), exist_ok=True)
+                        os.makedirs(os.path.join(self.text_folder_path,"test"), exist_ok=True)
+                        
                 self.label_folder_path = os.path.join(folder_path, 'label')
                 if not os.path.isdir(self.label_folder_path):
-                    os.mkdir(self.label_folder_path)
-                self.annotation_folder = os.path.join(folder_path, 'annotation')
-                self.images = sorted(os.listdir(self.image_folder_path))
+                    if content_type == "file":
+                        os.mkdir(self.label_folder_path)
+                    else:
+                        os.makedirs(os.path.join(self.label_folder_path, "train"), exist_ok=True)
+                        os.makedirs(os.path.join(self.label_folder_path, "test"), exist_ok=True)
+                        
+                self.annotation_path = get_annotation_path(folder_path)
+                self.images = sorted(get_filenames(self.image_folder_path, content_type))
                 for image in self.images:
                     self.images_list.addItem(image)
                     
@@ -166,7 +177,7 @@ class ImageAnnotator(QMainWindow):
             scale_factor_height = scaled_pixmap.height() / pixmap.height()
             
             # annotationの表示
-            annotation_path = os.path.join(self.annotation_folder, self.images[self.current_image_index].split(".")[0]+"_anno.json")
+            annotation_path = self.annotation_path % tuple(self.images[self.current_image_index].split(".")[0].split("/"))
             self.draw_annotation(annotation_path, scale_factor_width, scale_factor_height)
             
             # テキストの表示
@@ -193,25 +204,39 @@ class ImageAnnotator(QMainWindow):
             self.bbox2ann = {}
 
             for annotation in annotations:
-                # bbox = QRectF(annotation['x'], annotation['y'], annotation['width'], annotation['height'])
-                # self.scene.addRect(bbox, QPen(Qt.green))
-                points = [QPointF(annotation['bbox'][i]*scale_factor_width, annotation['bbox'][i+1]*scale_factor_height) for i in range(0, len(annotation['bbox']), 2)]
-                polygon = QPolygonF(points)                
-                # 多角形をシーンに追加
-                polygon_item = QGraphicsPolygonItem(polygon)
-                # 枠線の設定
-                polygon_item.setPen(QPen(Qt.green))
-                # 塗りつぶしの設定
-                polygon_item.setBrush(QBrush(QColor(0, 255, 0, 100)))
-                
-                ann = list(map(str,annotation.values()))
-                self.annotation_list.addItem(",".join(ann))
-                
-                self.ann2bbox[",".join(ann)] = polygon_item
-                self.bbox2ann[polygon_item] = ",".join(ann)
-                
-                if self.show_annotations:
-                    self.scene.addItem(polygon_item)
+                if len(annotation["bbox"]) == 4:
+                    bbox = QRectF(annotation['bbox'][0]*scale_factor_width, annotation['bbox'][1]*scale_factor_height,\
+                                    annotation['bbox'][2]*scale_factor_width, annotation['bbox'][3]*scale_factor_height)
+                    rect_item = QGraphicsRectItem(bbox)
+                    rect_item.setPen(QPen(Qt.green))
+                    rect_item.setBrush(QBrush(QColor(0, 255, 0, 100)))
+                    
+                    ann = list(map(str,annotation.values()))
+                    self.annotation_list.addItem(",".join(ann))
+                    
+                    self.ann2bbox[",".join(ann)] = rect_item
+                    self.bbox2ann[rect_item] = ",".join(ann)
+                    
+                    if self.show_annotations:
+                        self.scene.addItem(rect_item)
+                else:
+                    points = [QPointF(annotation['bbox'][i]*scale_factor_width, annotation['bbox'][i+1]*scale_factor_height) for i in range(0, len(annotation['bbox']), 2)]
+                    polygon = QPolygonF(points)                
+                    # 多角形をシーンに追加
+                    polygon_item = QGraphicsPolygonItem(polygon)
+                    # 枠線の設定
+                    polygon_item.setPen(QPen(Qt.green))
+                    # 塗りつぶしの設定
+                    polygon_item.setBrush(QBrush(QColor(0, 255, 0, 100)))
+                    
+                    ann = list(map(str,annotation.values()))
+                    self.annotation_list.addItem(",".join(ann))
+                    
+                    self.ann2bbox[",".join(ann)] = polygon_item
+                    self.bbox2ann[polygon_item] = ",".join(ann)
+                    
+                    if self.show_annotations:
+                        self.scene.addItem(polygon_item)
                     
             self.view.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
     
