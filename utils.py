@@ -7,18 +7,18 @@ def check_directory_type(path):
     contents = os.listdir(path)
     if ".DS_Store" in contents:
         contents.remove(".DS_Store")
-        
+
     has_directory = False
     has_file = False
-    
+
     for item in contents:
         item_path = os.path.join(path, item)
-        
+
         if os.path.isdir(item_path):
             has_directory = True
         elif os.path.isfile(item_path):
             has_file = True
-    
+
     if has_directory and (not has_file):
         return "directory"
     if has_file and (not has_directory):
@@ -71,11 +71,11 @@ def load_annotations(annotation_path):
         data = json.load(open(annotation_path, 'r'))
         for key in data.keys():
             points = data[key]["bbox"]
-            annotations.append({'bbox': points, "text": data[key]["text"]})
+            annotations.append({'bbox': points, "text": data[key]["text"].lower()})
     elif "Total-Text" in annotation_path:
         with open(annotation_path, "r") as f:
             data = f.readlines()
-            
+
             for ann in data:
                 try:
                     ann = ann.strip().replace("\n","").split(", ")
@@ -104,7 +104,7 @@ def load_annotations(annotation_path):
                 bbox[3] -= bbox[1]
                 text = a.split(" ")[-1]
                 annotations.append({'bbox': bbox, "text": text})
-    
+
     elif "icdar" in annotation_path and "2017" in annotation_path:
         with open(annotation_path, "r") as f:
             ann = f.read()
@@ -112,5 +112,5 @@ def load_annotations(annotation_path):
                 bbox = list(map(int,a.split(",")[:8]))
                 text = a.split(",")[-1]
                 annotations.append({'bbox': bbox, "text": text})
-    
+
     return annotations
