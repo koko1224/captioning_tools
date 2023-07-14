@@ -47,12 +47,14 @@ class ImageAnnotator(QMainWindow):
         self.annotation_label.setText("annotation list")
         self.annotation_list = QListWidget(self)
         self.annotation_list.currentItemChanged.connect(self.select_bbox_list)
+        self.annotation_list.itemDoubleClicked.connect(self.get_annotation_label)
 
         # 画像一覧
         self.images_list_label = QLabel(self)
         self.images_list_label.setText("image list")
         self.images_list = QListWidget(self)
         self.images_list.currentItemChanged.connect(self.show_selected_image)
+        self.images_list.itemDoubleClicked.connect(self.get_now_filename)
 
         # ボタン
         self.folder_button = Action_Button(self, "./icon/open-file-folder-emoji.png", "Open", 20, 20, 50, 70)
@@ -99,6 +101,16 @@ class ImageAnnotator(QMainWindow):
         self.toggle_annotations_action.setCheckable(True)
         self.toggle_annotations_action.setChecked(True)
         self.toggle_annotations_action.triggered.connect(self.toggle_annotations)
+
+    def get_annotation_label(self, item):
+        text_ann = item.text().split(",")[-1]
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text_ann)
+
+    def get_now_filename(self,item):
+        text = item.text()
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
 
     def create_menus(self):
         menubar = self.menuBar()
