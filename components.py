@@ -1,9 +1,5 @@
-import os
-import sys
-import json
-from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtWidgets import QListWidget, QVBoxLayout,QPushButton, QDialog, QToolButton
-from PyQt5.QtGui import QPixmap,QImage, QIcon, QKeySequence, QPixmap, QPainter, QColor, QPen, QPolygonF, QBrush
+from PyQt5.QtGui import QIcon
 
 class FolderSelectionDialog(QDialog):
     def __init__(self, folder_paths):
