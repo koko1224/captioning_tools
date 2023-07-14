@@ -296,8 +296,8 @@ class ImageAnnotator(QMainWindow):
     def back_image(self):
         if self.image_folder_path is not None:
             self.current_image_index -= 1
-            if self.current_image_index <= 0:
-                self.current_image_index = 0
+            if self.current_image_index < 0:
+                self.current_image_index = len(self.images) - 1
             self.show_image()
 
     def resizeEvent(self, event):

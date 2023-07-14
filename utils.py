@@ -44,12 +44,14 @@ def get_filenames(folder_path, content_type):
             filenames.extend(filenames_tmp)
         return filenames
 
+
 def get_textfolder(folder_path):
     contents = sorted(os.listdir(folder_path))
     for content in contents:
         if "text" in content:
             return os.path.join(folder_path,content)
     return os.path.join(folder_path, 'text')
+
 
 def get_annotation_path(folder_path):
     if "textseg" in folder_path:
@@ -63,7 +65,8 @@ def get_annotation_path(folder_path):
     elif "icdar" in folder_path and "2017" in folder_path:
         return os.path.join(folder_path, "annotation", "gt_%s.txt")
     else:
-        os.path.join(folder_path, "annotation","%s_anno.json")
+        raise Exception("This dataset is not supported")
+
 
 def load_annotations(annotation_path):
     annotations = []
