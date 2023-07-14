@@ -2,12 +2,12 @@ import os
 import sys
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidget, QAction,\
-                            QLabel, QFileDialog, QTextEdit,QToolButton, QLineEdit,\
-                            QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsPolygonItem
-from PyQt5.QtGui import QPixmap,QImage, QIcon, QKeySequence, QPixmap, QPainter, QColor, QPen, QPolygonF, QBrush
+                            QLabel, QFileDialog, QTextEdit,\
+                            QGraphicsScene, QGraphicsView, QGraphicsRectItem, QGraphicsPolygonItem
+from PyQt5.QtGui import QPixmap, QKeySequence, QPixmap, QColor, QPen, QPolygonF, QBrush
 
 from utils import load_annotations, get_filenames, get_textfolder, get_annotation_path, check_directory_type
-from components import FolderSelectionDialog, Action_Button
+from components import Action_Button
 
 class ImageAnnotator(QMainWindow):
     def __init__(self):
