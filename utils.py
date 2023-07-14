@@ -3,6 +3,14 @@ import json
 import re
 
 def check_directory_type(path):
+    """
+    引数で渡したディレクトリの種類が以下のどちらかを判定する
+        - 画像のみが格納されているディレクトリ
+        - Train, Testのディレクトリが存在し, 画像が格納されているディレクトリ
+
+    :param path: ディレクトリのパス
+    """
+
     # ディレクトリ内の全ての子要素を取得
     contents = os.listdir(path)
     if ".DS_Store" in contents:
@@ -28,6 +36,12 @@ def check_directory_type(path):
 
 
 def get_filenames(folder_path, content_type):
+    """
+    folderに格納されているファイル名を全て取得する
+
+    :param folder_path: フォルダのパス
+    :param content_type: フォルダ内のファイルの種類
+    """
     if content_type == "file":
         filenames = os.listdir(folder_path)
         if ".DS_Store" in filenames:
@@ -46,6 +60,11 @@ def get_filenames(folder_path, content_type):
 
 
 def get_textfolder(folder_path):
+    """
+    テキストファイルが格納されているフォルダのパスを取得する
+
+    :param folder_path: フォルダのパス
+    """
     contents = sorted(os.listdir(folder_path))
     for content in contents:
         if "text" in content:
@@ -54,6 +73,17 @@ def get_textfolder(folder_path):
 
 
 def get_annotation_path(folder_path):
+    """
+    アノテーションファイルのパスの型を作成する
+    対応済み
+        - textseg
+        - Total-Text
+        - IIIT5K
+        - icdar2013
+        - icdar2017
+
+    :param folder_path: フォルダのパス
+    """
     if "textseg" in folder_path:
         return os.path.join(folder_path, "annotation","%s_anno.json")
     elif "Total-Text" in folder_path:
@@ -69,6 +99,12 @@ def get_annotation_path(folder_path):
 
 
 def load_annotations(annotation_path):
+    """
+    annotationを読み込む
+    対応済みデータセットはget_annotation_pathと同じ
+
+    :param annotation_path: アノテーションファイルのパス
+    """
     annotations = []
     if "textseg" in annotation_path:
         data = json.load(open(annotation_path, 'r'))
