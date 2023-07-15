@@ -125,14 +125,14 @@ def load_annotations(annotation_path):
                     print(ann)
                     ann
                     exit()
-                annotations.append({'bbox': [value for pair in zip(x, y) for value in pair], "text": text})
+                annotations.append({'bbox': [value for pair in zip(x, y) for value in pair], "text": text.lower()})
     elif "IIIT5K" in annotation_path:
         with open(annotation_path, "r") as f:
             ann = f.read()
             for a in ann.strip().split("\n"):
                 bbox = list(map(int,a.split(" ")[:4]))
                 text = a.split(" ")[-1]
-                annotations.append({'bbox': bbox, "text": text})
+                annotations.append({'bbox': bbox, "text": text.lower()})
 
     elif "icdar" in annotation_path and "2013" in annotation_path:
         with open(annotation_path, "r") as f:
@@ -142,7 +142,7 @@ def load_annotations(annotation_path):
                 bbox[2] -= bbox[0]
                 bbox[3] -= bbox[1]
                 text = a.split(" ")[-1]
-                annotations.append({'bbox': bbox, "text": text})
+                annotations.append({'bbox': bbox, "text": text.lower()})
 
     elif "icdar" in annotation_path and "2017" in annotation_path:
         with open(annotation_path, "r") as f:
@@ -150,6 +150,6 @@ def load_annotations(annotation_path):
             for a in ann.strip().split("\n"):
                 bbox = list(map(int,a.split(",")[:8]))
                 text = a.split(",")[-1]
-                annotations.append({'bbox': bbox, "text": text})
+                annotations.append({'bbox': bbox, "text": text.lower()})
 
     return annotations

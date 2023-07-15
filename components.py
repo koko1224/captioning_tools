@@ -25,6 +25,7 @@ class FolderSelectionDialog(QDialog):
             self.selected_folder = selected_items[0].text()
         self.accept()
 
+
 class Action_Button(QToolButton):
     def __init__(self, parent,icon_path, tag, ax:int, ay:int, aw:int, ah:int):
         super().__init__(parent)
