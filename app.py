@@ -51,7 +51,7 @@ class ImageAnnotator(QMainWindow):
         self.annotation_label.setText("annotation list")
         self.annotation_list = QListWidget(self)
         self.annotation_list.currentItemChanged.connect(self.select_bbox_list)
-        self.annotation_list.itemDoubleClicked.connect(self.get_annotation_label)
+        self.annotation_list.itemDoubleClicked.connect(self.get_selected_annotation_word)
 
         # 画像一覧
         self.images_list_label = QLabel(self)
@@ -61,8 +61,8 @@ class ImageAnnotator(QMainWindow):
         self.images_list.itemDoubleClicked.connect(self.get_now_filename)
 
         # ボタン
-        self.folder_button = Action_Button(self, "./icon/open-file-folder-emoji.png", "Open", 20, 20, 50, 70)
-        self.next_button   = Action_Button(self, "./icon/right.png", "Next",20, 110, 50, 70)
+        self.folder_button = Action_Button(self, "./icon/open.png", "Open", 20, 20, 50, 70)
+        self.next_button   = Action_Button(self, "./icon/right.png","Next", 20, 110, 50, 70)
         self.back_button   = Action_Button(self, "./icon/left.png", "Back", 20, 200, 50, 70)
         self.save_button   = Action_Button(self, "./icon/save.png", "Save", 20, 290, 50, 70)
 
@@ -77,24 +77,25 @@ class ImageAnnotator(QMainWindow):
         self.create_actions()
         self.create_menus()
 
+
     def connect_buttons(self):
         self.folder_button.clicked.connect(self.open_folder)
         self.save_button.clicked.connect(self.save_caption)
         self.next_button.clicked.connect(self.next_image)
         self.back_button.clicked.connect(self.back_image)
 
-        # move action
         self.next_button.setShortcut(Qt.Key_Right)
         self.back_button.setShortcut(Qt.Key_Left)
 
+
     def create_actions(self):
         # Save action
-        self.save_action = QAction('Save File',self)
+        self.save_action = QAction('Save File', self)
         self.save_action.setShortcut(QKeySequence('Ctrl+S'))
         self.save_action.triggered.connect(self.save_caption)
 
         # Open folder action
-        self.open_folder_action = QAction('Open Folder',self)
+        self.open_folder_action = QAction('Open Folder', self)
         self.open_folder_action.setShortcut(QKeySequence('Ctrl+O'))
         self.open_folder_action.triggered.connect(self.open_folder)
 
@@ -106,15 +107,6 @@ class ImageAnnotator(QMainWindow):
         self.toggle_annotations_action.setChecked(True)
         self.toggle_annotations_action.triggered.connect(self.toggle_annotations)
 
-    def get_annotation_label(self, item):
-        text_ann = item.text().split(",")[-1]
-        clipboard = QApplication.clipboard()
-        clipboard.setText(text_ann)
-
-    def get_now_filename(self,item):
-        text = item.text()
-        clipboard = QApplication.clipboard()
-        clipboard.setText(text)
 
     def create_menus(self):
         menubar = self.menuBar()
@@ -125,6 +117,7 @@ class ImageAnnotator(QMainWindow):
         # Viewメニュー
         view_menu = menubar.addMenu('View')
         view_menu.addAction(self.toggle_annotations_action)
+
 
     def open_folder(self):
         self.images_list.clear()
@@ -160,8 +153,8 @@ class ImageAnnotator(QMainWindow):
                 self.total_count.setText("/ " + str(len(self.images)))
                 self.show_image()
 
+
     def show_image(self):
-        # 画像の表示
         image_path = os.path.join(self.image_folder_path, self.images[self.current_image_index])
 
         # images_listのアイテムを検索し，選択状態にする
@@ -170,7 +163,6 @@ class ImageAnnotator(QMainWindow):
             item = items[0]
             self.images_list.setCurrentItem(item)
 
-        # 画像とアノテーションの表示
         if os.path.isfile(image_path):
             self.image_count.setText(str(self.current_image_index))
 
@@ -204,6 +196,7 @@ class ImageAnnotator(QMainWindow):
                     self.caption.setText(data)
             else:
                 self.caption.setText("")
+
             # ラベルの表示
             label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt"))
             if os.path.isfile(label_path):
@@ -212,6 +205,7 @@ class ImageAnnotator(QMainWindow):
                     self.label_edit.setText(data)
             else:
                 self.label_edit.setText("")
+
 
     def draw_annotation(self,annotation_path, scale_factor_width, scale_factor_height):
         if os.path.exists(annotation_path):
@@ -223,38 +217,54 @@ class ImageAnnotator(QMainWindow):
                 if len(annotation["bbox"]) == 4:
                     bbox = QRectF(annotation['bbox'][0]*scale_factor_width, annotation['bbox'][1]*scale_factor_height,\
                                     annotation['bbox'][2]*scale_factor_width, annotation['bbox'][3]*scale_factor_height)
-                    rect_item = QGraphicsRectItem(bbox)
-                    rect_item.setPen(QPen(Qt.green))
-                    rect_item.setBrush(QBrush(QColor(0, 255, 0, 100)))
-
-                    ann = list(map(str,annotation.values()))
-                    self.annotation_list.addItem(",".join(ann))
-
-                    self.ann2bbox[",".join(ann)] = rect_item
-                    self.bbox2ann[rect_item] = ",".join(ann)
-
-                    if self.show_annotations:
-                        self.scene.addItem(rect_item)
+                    ann_item = QGraphicsRectItem(bbox)
                 else:
                     points = [QPointF(annotation['bbox'][i]*scale_factor_width, annotation['bbox'][i+1]*scale_factor_height) for i in range(0, len(annotation['bbox']), 2)]
                     polygon = QPolygonF(points)
-                    # 多角形をシーンに追加
-                    polygon_item = QGraphicsPolygonItem(polygon)
-                    # 枠線の設定
-                    polygon_item.setPen(QPen(Qt.green))
-                    # 塗りつぶしの設定
-                    polygon_item.setBrush(QBrush(QColor(0, 255, 0, 100)))
+                    ann_item = QGraphicsPolygonItem(polygon)
 
-                    ann = list(map(str,annotation.values()))
-                    self.annotation_list.addItem(",".join(ann))
+                ann_item.setPen(QPen(Qt.green))
+                ann_item.setBrush(QBrush(QColor(0, 255, 0, 100)))
 
-                    self.ann2bbox[",".join(ann)] = polygon_item
-                    self.bbox2ann[polygon_item] = ",".join(ann)
+                ann = list(map(str,annotation.values()))
+                self.annotation_list.addItem(",".join(ann))
 
-                    if self.show_annotations:
-                        self.scene.addItem(polygon_item)
+                self.ann2bbox[",".join(ann)] = ann_item
+                self.bbox2ann[ann_item] = ",".join(ann)
+
+                if self.show_annotations:
+                    self.scene.addItem(ann_item)
 
             self.view.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+
+
+    def next_image(self):
+        if self.image_folder_path is not None:
+            self.current_image_index += 1
+            if self.current_image_index >= len(self.images):
+                self.current_image_index = 0
+            self.show_image()
+
+
+    def back_image(self):
+        if self.image_folder_path is not None:
+            self.current_image_index -= 1
+            if self.current_image_index < 0:
+                self.current_image_index = len(self.images) - 1
+            self.show_image()
+
+
+    def show_selected_image(self, current_item, previous_item):
+        if current_item is not None:
+            selected_filename = current_item.text()
+            self.current_image_index = self.images.index(selected_filename)
+            self.show_image()
+
+
+    def toggle_annotations(self):
+        self.show_annotations = not self.show_annotations
+        self.show_image()
+
 
     def select_bbox_list(self, current_item, previous_item):
         if current_item is not None:
@@ -267,15 +277,6 @@ class ImageAnnotator(QMainWindow):
             item.setPen(QPen(Qt.yellow))
             item.setBrush(QBrush(QColor(255, 255, 0, 100)))
 
-    def show_selected_image(self, current_item, previous_item):
-        if current_item is not None:
-            selected_filename = current_item.text()
-            self.current_image_index = self.images.index(selected_filename)
-            self.show_image()
-
-    def toggle_annotations(self):
-        self.show_annotations = not self.show_annotations
-        self.show_image()
 
     def save_caption(self):
         if self.text_folder_path is not None and self.label_folder_path is not None:
@@ -290,19 +291,18 @@ class ImageAnnotator(QMainWindow):
             with open(label_path, 'w') as f:
                 f.write(label_text)
 
-    def next_image(self):
-        if self.image_folder_path is not None:
-            self.current_image_index += 1
-            if self.current_image_index >= len(self.images):
-                self.current_image_index = 0
-            self.show_image()
 
-    def back_image(self):
-        if self.image_folder_path is not None:
-            self.current_image_index -= 1
-            if self.current_image_index < 0:
-                self.current_image_index = len(self.images) - 1
-            self.show_image()
+    def get_selected_annotation_word(self, item):
+        text_ann = item.text().split(",")[-1]
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text_ann)
+
+
+    def get_now_filename(self, item):
+        text = item.text()
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
+
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -322,7 +322,7 @@ class ImageAnnotator(QMainWindow):
 
         # label
         self.label_label.setGeometry(annotation_area_x, 40, 60, 30)
-        self.label_edit.setGeometry(annotation_area_x, 70, size.width() - (annotation_area_x + 100), 50)
+        self.label_edit.setGeometry(annotation_area_x, 70, size.width() - (annotation_area_x + 10), 50)
 
         # caption
         self.caption_label.setGeometry(annotation_area_x, 120, 620, 30)
@@ -338,6 +338,7 @@ class ImageAnnotator(QMainWindow):
         image_list_height = max(50, size.height() - image_list_y - 40)
         self.images_list_label.setGeometry(annotation_area_x, image_list_y, 300, 30)
         self.images_list.setGeometry(annotation_area_x, image_list_y + 30, size.width() - (annotation_area_x + 10), image_list_height)
+
 
     def mousePressEvent(self, event):
         """
@@ -362,6 +363,7 @@ class ImageAnnotator(QMainWindow):
                         if ann_items:
                             self.annotation_list.setCurrentItem(ann_items[0])
                         break
+
 
 if __name__ == '__main__':
     app = QApplication([])
