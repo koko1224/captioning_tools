@@ -2,6 +2,21 @@ import os
 import json
 import re
 
+# ファイル名をソートする関数
+def custom_sort(file_name):
+    # 数字のパターンにマッチする部分を検索
+    match = re.search(r'(\D+)(\d+)', file_name)
+
+    # マッチしなかった場合はファイル名全体を返す
+    if match:
+        prefix, number = match.groups()
+    else:
+        prefix = file_name
+        number = ""
+
+    # プレフィックスでソートし、次に数値でソート
+    return (prefix, int(number))
+
 def check_directory_type(path):
     """
     引数で渡したディレクトリの種類が以下のどちらかを判定する

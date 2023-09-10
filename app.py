@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog,
 
 from components import Action_Button
 from utils import (check_directory_type, get_annotation_path, get_filenames,
-                   get_textfolder, load_annotations)
+                   get_textfolder, load_annotations, custom_sort)
 
 
 class ImageAnnotator(QMainWindow):
@@ -144,7 +144,7 @@ class ImageAnnotator(QMainWindow):
                         os.makedirs(os.path.join(self.label_folder_path, "test"), exist_ok=True)
 
                 self.annotation_path = get_annotation_path(folder_path)
-                self.images = sorted(get_filenames(self.image_folder_path, content_type))
+                self.images = sorted(get_filenames(self.image_folder_path, content_type),key=custom_sort)
                 for image in self.images:
                     self.images_list.addItem(image)
 
