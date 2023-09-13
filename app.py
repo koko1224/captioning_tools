@@ -364,6 +364,25 @@ class ImageAnnotator(QMainWindow):
                             self.annotation_list.setCurrentItem(ann_items[0])
                         break
 
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            for item in self.scene.items():
+                if isinstance(item, QGraphicsView):
+                    continue
+                if isinstance(item, QGraphicsRectItem) or isinstance(item, QGraphicsPolygonItem):
+                    if item.isUnderMouse():
+                        if self.selected_annotation is not None:
+                            self.selected_annotation.setPen(QPen(Qt.green))
+                            self.selected_annotation.setBrush(QBrush(QColor(0, 255, 0, 100)))
+                        self.selected_annotation = item
+                        item.setPen(QPen(Qt.yellow))
+                        item.setBrush(QBrush(QColor(255, 255, 0, 100)))
+                        ann_items = self.annotation_list.findItems(self.bbox2ann[item], Qt.MatchExactly)
+                        if ann_items:
+                            self.annotation_list.setCurrentItem(ann_items[0])
+                            self.get_selected_annotation_word(ann_items[0])
+                        break
+
 
 if __name__ == '__main__':
     app = QApplication([])
