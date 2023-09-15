@@ -283,12 +283,12 @@ class ImageAnnotator(QMainWindow):
         if self.text_folder_path is not None and self.label_folder_path is not None:
             self.view.setFocus()
             caption_text = self.caption.toPlainText()
-            text_path = os.path.join(self.text_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt"))
+            text_path = os.path.join(self.text_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt").replace("gif","txt"))
             with open(text_path, 'w') as f:
                 f.write(caption_text)
 
             label_text = self.label_edit.toPlainText()
-            label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt"))
+            label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt").replace("gif","txt"))
             with open(label_path, 'w') as f:
                 f.write(label_text)
 
