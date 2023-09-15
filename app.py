@@ -154,7 +154,7 @@ class ImageAnnotator(QMainWindow):
                 self.show_image()
 
 
-    def show_image(self):
+    def show_image(self,chenge_index=True):
         image_path = os.path.join(self.image_folder_path, self.images[self.current_image_index])
 
         # images_listのアイテムを検索し，選択状態にする
@@ -188,23 +188,24 @@ class ImageAnnotator(QMainWindow):
             annotation_path = self.annotation_path % tuple(self.images[self.current_image_index].split(".")[0].split("/"))
             self.draw_annotation(annotation_path, scale_factor_width, scale_factor_height)
 
-            # テキストの表示
-            text_path = os.path.join(self.text_folder_path, self.images[self.current_image_index].replace("jpg","txt"))
-            if os.path.isfile(text_path):
-                with open(text_path,mode="r") as f:
-                    data = f.read()
-                    self.caption.setText(data)
-            else:
-                self.caption.setText("")
+            if chenge_index:
+                # テキストの表示
+                text_path = os.path.join(self.text_folder_path, self.images[self.current_image_index].replace("jpg","txt"))
+                if os.path.isfile(text_path):
+                    with open(text_path,mode="r") as f:
+                        data = f.read()
+                        self.caption.setText(data)
+                else:
+                    self.caption.setText("")
 
-            # ラベルの表示
-            label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt"))
-            if os.path.isfile(label_path):
-                with open(label_path,mode="r") as f:
-                    data = f.read()
-                    self.label_edit.setText(data)
-            else:
-                self.label_edit.setText("")
+                # ラベルの表示
+                label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt"))
+                if os.path.isfile(label_path):
+                    with open(label_path,mode="r") as f:
+                        data = f.read()
+                        self.label_edit.setText(data)
+                else:
+                    self.label_edit.setText("")
 
 
     def draw_annotation(self,annotation_path, scale_factor_width, scale_factor_height):
@@ -263,7 +264,7 @@ class ImageAnnotator(QMainWindow):
 
     def toggle_annotations(self):
         self.show_annotations = not self.show_annotations
-        self.show_image()
+        self.show_image(chenge_index=False)
 
 
     def select_bbox_list(self, current_item, previous_item):
@@ -293,9 +294,13 @@ class ImageAnnotator(QMainWindow):
 
 
     def get_selected_annotation_word(self, item):
-        text_ann = item.text().split(",")[-1]
+        text_ann = item.text().split(",")
+        if len(text_ann[-1]) >= 1:
+            text = text_ann[-1]
+        else:
+            text = text_ann[-2] + ","
         clipboard = QApplication.clipboard()
-        clipboard.setText(text_ann)
+        clipboard.setText(text)
 
 
     def get_now_filename(self, item):
