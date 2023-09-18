@@ -190,7 +190,7 @@ class ImageAnnotator(QMainWindow):
 
             if chenge_index:
                 # テキストの表示
-                text_path = os.path.join(self.text_folder_path, self.images[self.current_image_index].replace("jpg","txt"))
+                text_path = os.path.join(self.text_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt").replace("gif","txt"))
                 if os.path.isfile(text_path):
                     with open(text_path,mode="r") as f:
                         data = f.read()
@@ -199,7 +199,7 @@ class ImageAnnotator(QMainWindow):
                     self.caption.setText("")
 
                 # ラベルの表示
-                label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt"))
+                label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt").replace("gif","txt"))
                 if os.path.isfile(label_path):
                     with open(label_path,mode="r") as f:
                         data = f.read()
