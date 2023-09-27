@@ -173,10 +173,7 @@ def load_annotations(annotation_path):
             for a in ann.strip().split("\n"):
                 a = a.split(",")
                 bbox = list(map(int,a[:8]))
-                if len(a[-1]) >= 1:
-                    text = a[-1]
-                else:
-                    text = a[-2] + ","
+                text = ",".join(a[9:])
                 annotations.append({'bbox': bbox, "text": text.lower()})
 
     return annotations
