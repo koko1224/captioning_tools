@@ -3,7 +3,7 @@ import sys
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QKeySequence, QPen, QPixmap, QPolygonF
-from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog,
+from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QPushButton,
                              QGraphicsPolygonItem, QGraphicsRectItem,
                              QGraphicsScene, QGraphicsView, QLabel,
                              QListWidget, QMainWindow, QTextEdit)
@@ -66,11 +66,22 @@ class ImageAnnotator(QMainWindow):
         self.back_button   = Action_Button(self, "./icon/left.png", "Back", 20, 200, 50, 70)
         self.save_button   = Action_Button(self, "./icon/save.png", "Save", 20, 290, 50, 70)
 
+        # トグルボタン
+        self.toggle_skip = QPushButton("skip mode", self)
+        self.toggle_skip.setCheckable(True)
+        self.toggle_skip.clicked.connect(self.skip_annotated_image)
+
+        self.toggle_ann = QPushButton("Hide ###", self)
+        self.toggle_ann.setCheckable(True)
+        self.toggle_ann.clicked.connect(self.hide_annotations)
+
         self.image_folder_path = None
         self.text_folder_path = None
         self.label_folder_path = None
         self.selected_annotation = None
         self.show_annotations = True  # アノテーションの表示/非表示を切り替えるフラグ
+        self.skip_mode = False  # スキップモードのフラグ
+        self.hide_flag = False
 
         self.scene.setFocus()
         self.connect_buttons()
@@ -151,10 +162,10 @@ class ImageAnnotator(QMainWindow):
                 self.current_image_index = 0
                 self.image_count.setText(str(self.current_image_index))
                 self.total_count.setText("/ " + str(len(self.images)))
-                self.show_image()
+                self.show_image(skip_option = "next")
 
 
-    def show_image(self,chenge_index=True):
+    def show_image(self, chenge_index=True, skip_option=None):
         image_path = os.path.join(self.image_folder_path, self.images[self.current_image_index])
 
         # images_listのアイテムを検索し，選択状態にする
@@ -201,9 +212,15 @@ class ImageAnnotator(QMainWindow):
                 # ラベルの表示
                 label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt").replace("gif","txt"))
                 if os.path.isfile(label_path):
-                    with open(label_path,mode="r") as f:
-                        data = f.read()
-                        self.label_edit.setText(data)
+                    if skip_option is None or not self.skip_mode:
+                        with open(label_path,mode="r") as f:
+                            data = f.read()
+                            self.label_edit.setText(data)
+                    else:
+                        if skip_option == "next":
+                            self.next_image()
+                        else:
+                            self.back_image()
                 else:
                     self.label_edit.setText("")
 
@@ -215,6 +232,8 @@ class ImageAnnotator(QMainWindow):
             self.bbox2ann = {}
 
             for annotation in annotations:
+                if self.hide_flag and annotation["text"]=="###":
+                    continue
                 if len(annotation["bbox"]) == 4:
                     bbox = QRectF(annotation['bbox'][0]*scale_factor_width, annotation['bbox'][1]*scale_factor_height,\
                                     annotation['bbox'][2]*scale_factor_width, annotation['bbox'][3]*scale_factor_height)
@@ -244,7 +263,7 @@ class ImageAnnotator(QMainWindow):
             self.current_image_index += 1
             if self.current_image_index >= len(self.images):
                 self.current_image_index = 0
-            self.show_image()
+            self.show_image(skip_option="next")
 
 
     def back_image(self):
@@ -252,7 +271,7 @@ class ImageAnnotator(QMainWindow):
             self.current_image_index -= 1
             if self.current_image_index < 0:
                 self.current_image_index = len(self.images) - 1
-            self.show_image()
+            self.show_image(skip_option="back")
 
 
     def show_selected_image(self, current_item, previous_item):
@@ -263,9 +282,17 @@ class ImageAnnotator(QMainWindow):
 
 
     def toggle_annotations(self):
-        self.show_annotations = not self.show_annotations
-        self.show_image(chenge_index=False)
+        if self.image_folder_path is not None:
+            self.show_annotations = not self.show_annotations
+            self.show_image(chenge_index=False)
 
+    def hide_annotations(self):
+        if self.image_folder_path is not None:
+            self.hide_flag = not self.hide_flag
+            self.show_image(chenge_index=False)
+
+    def skip_annotated_image(self):
+        self.skip_mode = not self.skip_mode
 
     def select_bbox_list(self, current_item, previous_item):
         if current_item is not None:
@@ -322,6 +349,7 @@ class ImageAnnotator(QMainWindow):
         self.view.setGeometry(100, 0, new_img_size, size.height())
 
         # カウント
+        self.toggle_skip.setGeometry(annotation_area_x + 100, 5, 100, 30)
         self.image_count.setGeometry(annotation_area_x, 5, 40, 30)
         self.total_count.setGeometry(annotation_area_x + 50, 5, 40, 30)
 
@@ -334,6 +362,7 @@ class ImageAnnotator(QMainWindow):
         self.caption.setGeometry(annotation_area_x, 150, size.width() - (annotation_area_x + 10), 50)
 
         # annotation一覧
+        self.toggle_ann.setGeometry(annotation_area_x + 100, 200, 100, 30)
         self.annotation_label.setGeometry(annotation_area_x, 200, 620, 30)
         annotation_list_height = max(50, size.height()//2 - 240)
         self.annotation_list.setGeometry(annotation_area_x, 230, size.width() - (annotation_area_x + 10), annotation_list_height)
