@@ -71,7 +71,7 @@ class ImageAnnotator(QMainWindow):
         self.toggle_skip.setCheckable(True)
         self.toggle_skip.clicked.connect(self.skip_annotated_image)
 
-        self.toggle_skip_exist = QPushButton("only exitst", self)
+        self.toggle_skip_exist = QPushButton("only exist", self)
         self.toggle_skip_exist.setCheckable(True)
         self.toggle_skip_exist.clicked.connect(self.skip_annotated_image_exist)
 
