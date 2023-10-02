@@ -67,9 +67,13 @@ class ImageAnnotator(QMainWindow):
         self.save_button   = Action_Button(self, "./icon/save.png", "Save", 20, 290, 50, 70)
 
         # トグルボタン
-        self.toggle_skip = QPushButton("skip mode", self)
+        self.toggle_skip = QPushButton("only none", self)
         self.toggle_skip.setCheckable(True)
         self.toggle_skip.clicked.connect(self.skip_annotated_image)
+
+        self.toggle_skip_exist = QPushButton("only exitst", self)
+        self.toggle_skip_exist.setCheckable(True)
+        self.toggle_skip_exist.clicked.connect(self.skip_annotated_image_exist)
 
         self.toggle_ann = QPushButton("Hide ###", self)
         self.toggle_ann.setCheckable(True)
@@ -81,6 +85,7 @@ class ImageAnnotator(QMainWindow):
         self.selected_annotation = None
         self.show_annotations = True  # アノテーションの表示/非表示を切り替えるフラグ
         self.skip_mode = False  # スキップモードのフラグ
+        self.skip_mode_exist = False  # スキップモードのフラグ
         self.hide_flag = False
 
         self.scene.setFocus()
@@ -212,7 +217,7 @@ class ImageAnnotator(QMainWindow):
                 # ラベルの表示
                 label_path = os.path.join(self.label_folder_path, self.images[self.current_image_index].replace("jpg","txt").replace("png","txt").replace("gif","txt"))
                 if os.path.isfile(label_path):
-                    if skip_option is None or not self.skip_mode:
+                    if skip_option is None or not self.skip_mode or (skip_option == "back" and len(self.images)==self.current_image_index+1) or (skip_option == "next" and self.current_image_index==0):
                         with open(label_path,mode="r") as f:
                             data = f.read()
                             self.label_edit.setText(data)
@@ -222,7 +227,13 @@ class ImageAnnotator(QMainWindow):
                         else:
                             self.back_image()
                 else:
-                    self.label_edit.setText("")
+                    if skip_option is None or not self.skip_mode_exist or (skip_option == "back" and len(self.images)==self.current_image_index+1) or (skip_option == "next" and self.current_image_index==0):
+                        self.label_edit.setText("")
+                    else:
+                        if skip_option == "next":
+                            self.next_image()
+                        else:
+                            self.back_image()
 
 
     def draw_annotation(self,annotation_path, scale_factor_width, scale_factor_height):
@@ -292,7 +303,16 @@ class ImageAnnotator(QMainWindow):
             self.show_image(chenge_index=False)
 
     def skip_annotated_image(self):
-        self.skip_mode = not self.skip_mode
+        if not self.skip_mode_exist:
+            self.skip_mode = not self.skip_mode
+        else:
+            self.toggle_skip.setChecked(False)
+
+    def skip_annotated_image_exist(self):
+        if not self.skip_mode:
+            self.skip_mode_exist = not self.skip_mode_exist
+        else:
+            self.toggle_skip_exist.setChecked(False)
 
     def select_bbox_list(self, current_item, previous_item):
         if current_item is not None:
@@ -350,6 +370,7 @@ class ImageAnnotator(QMainWindow):
 
         # カウント
         self.toggle_skip.setGeometry(annotation_area_x + 100, 5, 100, 30)
+        self.toggle_skip_exist.setGeometry(annotation_area_x + 200, 5, 100, 30)
         self.image_count.setGeometry(annotation_area_x, 5, 40, 30)
         self.total_count.setGeometry(annotation_area_x + 50, 5, 40, 30)
 

@@ -157,7 +157,7 @@ def load_annotations(annotation_path):
                     bbox = list(map(int,a.split(" ")[:4]))
                     bbox[2] -= bbox[0]
                     bbox[3] -= bbox[1]
-                    text = a.split(" ")[-1]
+                    text = a.split(" ")[-1][1:-1]
                     annotations.append({'bbox': bbox, "text": text.lower()})
         else:
             with open(annotation_path, "r") as f:
